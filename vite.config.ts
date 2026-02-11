@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   base: '/g8/',
@@ -9,5 +10,23 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets'
-  }
+  },
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: '*.gltf',
+          dest: '.'
+        },
+        {
+          src: '*.png',
+          dest: '.'
+        },
+        {
+          src: 'materials/**/*',
+          dest: 'materials'
+        }
+      ]
+    })
+  ]
 });
