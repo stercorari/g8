@@ -29,24 +29,7 @@ const materialMappings: MaterialMapping = {
 const textureLoader = new TextureLoader();
 const exrLoader = new EXRLoader();
 
-function findTextureFile(folderPath: string, pattern: string): string | null {
-  // Try common texture file patterns
-  const patterns = [
-    pattern,
-    pattern.replace("_Color", "_diff").replace("_diff", "_diff_2k"),
-    pattern.replace("_Color", "_diff").replace("_diff", "_diff_4k"),
-    pattern.replace("_Roughness", "_rough").replace("_rough", "_rough_2k"),
-    pattern.replace("_NormalDX", "_nor_dx").replace("_nor_dx", "_nor_dx_2k"),
-    pattern.replace("_NormalDX", "_nor_gl").replace("_nor_gl", "_nor_gl_2k"),
-    pattern.replace("_Displacement", "_disp").replace("_disp", "_disp_2k"),
-  ];
-  
-  // For now, return a path - we'll need to check if files exist
-  // In a real implementation, you'd check the file system or have a manifest
-  return null;
-}
-
-function loadMaterialTextures(materialName: string, folderName: string): Promise<{
+function loadMaterialTextures(_materialName: string, folderName: string): Promise<{
   map?: THREE.Texture;
   normalMap?: THREE.Texture;
   roughnessMap?: THREE.Texture;

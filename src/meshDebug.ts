@@ -141,9 +141,10 @@ export function detectAndFixGlitches(model: THREE.Group, config: GlitchDetection
   
   if (overlappingPairs.length > 0) {
     console.log(`\n⚠️  Found ${overlappingPairs.length} potentially overlapping mesh pairs (z-fighting risk):`);
-    overlappingPairs.forEach((pair, idx) => {
-      // console.log(`   ${idx + 1}. ${pair.mesh1.name || 'unnamed'} <-> ${pair.mesh2.name || 'unnamed'} (${(pair.overlap * 100).toFixed(1)}% overlap)`);
-    });
+    // Logging disabled but kept for potential future use
+    // overlappingPairs.forEach((pair, idx) => {
+    //   console.log(`   ${idx + 1}. ${pair.mesh1.name || 'unnamed'} <-> ${pair.mesh2.name || 'unnamed'} (${(pair.overlap * 100).toFixed(1)}% overlap)`);
+    // });
   }
   
   // 3. Fix z-fighting by adding polygon offset

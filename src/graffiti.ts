@@ -119,7 +119,7 @@ function createTagTexture(width: number = 256, height: number = 256): THREE.Canv
  * Creates a graffiti decal mesh that can be applied to a surface
  */
 function createGraffitiDecal(
-  mesh: THREE.Mesh,
+  _mesh: THREE.Mesh,
   position: THREE.Vector3,
   normal: THREE.Vector3,
   size: THREE.Vector2,
@@ -129,16 +129,13 @@ function createGraffitiDecal(
     // Create decal geometry
     const decalGeometry = new THREE.PlaneGeometry(size.x, size.y);
     
-    // Create decal material with slight emissive glow for visibility
+    // Create decal material
     const decalMaterial = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
       side: THREE.DoubleSide,
-      // Add slight emissive to make graffiti stand out in dark lighting
-      emissive: new THREE.Color(0x000000),
-      emissiveMap: texture,
     });
     
     // Create decal mesh

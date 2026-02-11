@@ -59,7 +59,7 @@ export function analyzeMeshes(model: THREE.Group): MeshInfo[] {
   return allMeshes;
 }
 
-export function cleanupMeshes(model: THREE.Group, allMeshes: MeshInfo[], modelScale: number): void {
+export function cleanupMeshes(_model: THREE.Group, allMeshes: MeshInfo[], modelScale: number): void {
   // Calculate center of all meshes
   const tempBox = new THREE.Box3();
   const meshCenters: THREE.Vector3[] = [];
