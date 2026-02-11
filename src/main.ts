@@ -14,7 +14,8 @@ import { createGhostlyImage } from "./ghostlyImage";
 import { setupNighthawksLighting } from "./nighthawksAtmosphere";
 import { setupBackgroundTexture } from "./backgroundTexture";
 // import { setupCinematicCamera } from "./cinematicCamera";
-import { setupDollyCamera, DollyCamera } from "./dollyCamera";
+import { setupDollyCamera, type DollyCamera } from "./dollyCamera";
+import { applyWoodMaterialToBench } from "./benchMaterial";
 // import { addGraffitiToWalls } from "./graffiti";
 
 /* ------------------------------------------------------------------
@@ -199,6 +200,9 @@ loader.load(
     box.setFromObject(model);
     const updatedModelCenter = box.getCenter(new THREE.Vector3());
     const updatedModelSize = box.getSize(new THREE.Vector3());
+    
+    // Apply wood material to bench (after scaling and positioning)
+    await applyWoodMaterialToBench(model, updatedModelCenter, updatedModelSize);
     
     // Create floor at ground level
     const floorSize = Math.max(updatedModelSize.x, updatedModelSize.z) * 3; // Floor extends beyond model

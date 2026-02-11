@@ -185,16 +185,18 @@ export class FlickeringLight {
         transparent: true,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
-        depthWrite: false, // Don't write depth for additive blending
-        depthTest: true,   // Test depth to prevent rendering through walls
-        depthFunc: THREE.LessEqualDepth, // Use standard depth function
+        depthWrite: false, // Don't write depth for additive blending (prevents artifacts)
+        depthTest: true,   // CRITICAL: Test depth to prevent rendering through walls
+        depthFunc: THREE.LessEqualDepth, // Standard depth function - only render if depth <= existing
         alphaTest: 0.001   // Very low threshold for ultra-soft edges
       });
       
       const beam = new THREE.Mesh(beamGeometry, beamMaterial);
       
-      // Ensure beams render after opaque objects (walls) and respect depth
-      beam.renderOrder = 100; // High render order to render after all opaque objects
+      // CRITICAL: Ensure beams render AFTER opaque objects (walls) and respect depth
+      // Lower renderOrder = renders first, Higher renderOrder = renders last
+      // Walls should have renderOrder = 0 (default), beams should have high renderOrder
+      beam.renderOrder = 1000; // Very high render order to ensure beams render AFTER all walls
       beam.frustumCulled = true;
       
       // Calculate direction for this beam (spreading outward in cone)
@@ -543,9 +545,9 @@ export function createDivineFlickeringLight(
   scene.add(flickeringLight.getPointLight()); // Add point light for ambient-like illumination
   scene.add(flickeringLight.getLightTarget());
   
-  // Add beam group - render after opaque objects so depth testing works properly
+  // Add beam group - render AFTER opaque objects so depth testing works properly
   const beamGroup = flickeringLight.getBeamGroup();
-  beamGroup.renderOrder = 100; // High render order to render after all opaque geometry (walls)
+  beamGroup.renderOrder = 1000; // Very high render order to ensure beams render AFTER all walls
   scene.add(beamGroup);
   
   console.log('   Light beam group added with', flickeringLight.getBeamGroup().children.length, 'beams');

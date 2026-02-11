@@ -230,6 +230,9 @@ export async function applyMaterialsFromFolder(model: THREE.Group): Promise<void
       const material = Array.isArray(obj.material) ? obj.material[0] : obj.material;
       if (material.name && materialMap.has(material.name)) {
         obj.material = materialMap.get(material.name)!;
+        // CRITICAL: Ensure walls render BEFORE light beams (lower renderOrder)
+        // This ensures depth buffer is populated before beams are rendered
+        obj.renderOrder = 0; // Default/low renderOrder - renders first
         appliedCount++;
       }
     }

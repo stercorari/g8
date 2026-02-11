@@ -3,22 +3,23 @@ import { TextureLoader } from "three";
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 
 /**
- * Floor creation with highway material
+ * Floor creation with asphalt material (GLTF optimized)
  */
 
 const textureLoader = new TextureLoader();
 const exrLoader = new EXRLoader();
 
 /**
- * Loads highway textures
+ * Loads asphalt textures (GLTF optimized, 1k resolution)
  */
-function loadHighwayTextures(): Promise<{
+function loadAsphaltTextures(): Promise<{
   map?: THREE.Texture;
   normalMap?: THREE.Texture;
   roughnessMap?: THREE.Texture;
   displacementMap?: THREE.Texture;
 }> {
   return new Promise((resolve) => {
+    // Use 4k textures from highway folder (better quality than 2k)
     const basePath = `${import.meta.env.BASE_URL}materials/highway/`;
     const textures: {
       map?: THREE.Texture;
@@ -28,7 +29,7 @@ function loadHighwayTextures(): Promise<{
     } = {};
     
     let loaded = 0;
-    const total = 4;
+    const total = 4; // diffuse, normal, roughness, displacement
     
     const checkComplete = () => {
       loaded++;
@@ -37,26 +38,78 @@ function loadHighwayTextures(): Promise<{
       }
     };
     
-    textureLoader.load(`${basePath}flower_scattered_asphalt_diff_4k.jpg`, (tex) => {
-      tex.colorSpace = THREE.SRGBColorSpace;
-      textures.map = tex;
-      checkComplete();
-    }, undefined, () => checkComplete());
+    // Helper function to configure texture for sharp quality
+    const configureTexture = (tex: THREE.Texture) => {
+      tex.minFilter = THREE.LinearMipmapLinearFilter; // High quality mipmaps
+      tex.magFilter = THREE.LinearFilter; // Linear filtering when magnified
+      tex.generateMipmaps = true; // Ensure mipmaps are generated
+      tex.anisotropy = 16; // Maximum anisotropy for better quality at angles
+    };
     
-    exrLoader.load(`${basePath}flower_scattered_asphalt_rough_4k.exr`, (tex) => {
-      textures.roughnessMap = tex;
-      checkComplete();
-    }, undefined, () => checkComplete());
+    // Diffuse/albedo texture (4k version)
+    textureLoader.load(
+      `${basePath}flower_scattered_asphalt_diff_4k.jpg`,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        configureTexture(tex);
+        textures.map = tex;
+        console.log(`✅ Loaded asphalt diffuse texture (4k)`);
+        checkComplete();
+      },
+      undefined,
+      (error) => {
+        console.error(`❌ Failed to load asphalt diffuse texture:`, error);
+        checkComplete();
+      }
+    );
     
-    exrLoader.load(`${basePath}flower_scattered_asphalt_nor_gl_4k.exr`, (tex) => {
-      textures.normalMap = tex;
-      checkComplete();
-    }, undefined, () => checkComplete());
+    // Normal map (EXR format, 4k - much better quality than JPG)
+    exrLoader.load(
+      `${basePath}flower_scattered_asphalt_nor_gl_4k.exr`,
+      (tex) => {
+        configureTexture(tex);
+        textures.normalMap = tex;
+        console.log(`✅ Loaded asphalt normal map (EXR 4k)`);
+        checkComplete();
+      },
+      undefined,
+      (error) => {
+        console.error(`❌ Failed to load asphalt normal map:`, error);
+        checkComplete();
+      }
+    );
     
-    textureLoader.load(`${basePath}flower_scattered_asphalt_disp_4k.png`, (tex) => {
-      textures.displacementMap = tex;
-      checkComplete();
-    }, undefined, () => checkComplete());
+    // Roughness map (EXR format, 4k - much better quality than JPG)
+    exrLoader.load(
+      `${basePath}flower_scattered_asphalt_rough_4k.exr`,
+      (tex) => {
+        configureTexture(tex);
+        textures.roughnessMap = tex;
+        console.log(`✅ Loaded asphalt roughness texture (EXR 4k)`);
+        checkComplete();
+      },
+      undefined,
+      (error) => {
+        console.error(`❌ Failed to load asphalt roughness texture:`, error);
+        checkComplete();
+      }
+    );
+    
+    // Displacement map (4k PNG)
+    textureLoader.load(
+      `${basePath}flower_scattered_asphalt_disp_4k.png`,
+      (tex) => {
+        configureTexture(tex);
+        textures.displacementMap = tex;
+        console.log(`✅ Loaded asphalt displacement texture (4k)`);
+        checkComplete();
+      },
+      undefined,
+      (error) => {
+        console.error(`❌ Failed to load asphalt displacement texture:`, error);
+        checkComplete();
+      }
+    );
   });
 }
 
@@ -73,22 +126,41 @@ export async function createFloor(
 ): Promise<THREE.Mesh | null> {
   console.log(`\n=== CREATING FLOOR ===`);
   
-  // Load highway textures
-  const textures = await loadHighwayTextures();
+  // Load asphalt textures (GLTF optimized)
+  const textures = await loadAsphaltTextures();
   
   if (!textures.map) {
-    console.error(`❌ Failed to load highway textures`);
-    return null;
+    console.error(`❌ Failed to load asphalt textures - floor will use default material`);
+    // Create a fallback material so floor still appears
+    const fallbackMaterial = new THREE.MeshStandardMaterial({
+      name: "floor_asphalt_fallback",
+      color: 0x333333, // Dark gray fallback
+      roughness: 0.8,
+    });
+    const floorSize = 10000;
+    const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
+    const floor = new THREE.Mesh(floorGeometry, fallbackMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = positionY;
+    floor.receiveShadow = true;
+    scene.add(floor);
+    return floor;
   }
+  
+  console.log(`✅ Successfully loaded all asphalt textures`);
   
   // Create floor material
   const floorMaterial = new THREE.MeshStandardMaterial({
-    name: "floor_highway",
+    name: "floor_asphalt",
+    metalness: 0.0,
+    roughness: 0.8, // Default roughness
   });
   
-  // Large texture repeat value - makes texture appear larger and repeat less
-  // Higher value = larger texture appearance, fewer repetitions
-  const textureRepeat = 50; // Fixed large value for bigger texture appearance
+  // Texture repeat - adjust based on desired detail level
+  // Lower value = more detail, more repetitions (sharper, smaller texture appearance)
+  // Higher value = less detail, fewer repetitions (more stretched/blurry, larger texture appearance)
+  // For 4k textures on a large floor, we can use higher repeat since we have more resolution
+  const textureRepeat = 25; // Increased to make texture appear smaller/more repeated
   
   if (textures.map) {
     floorMaterial.map = textures.map;
@@ -105,6 +177,7 @@ export async function createFloor(
   }
   
   if (textures.roughnessMap) {
+    // ARM texture: roughness is in green channel (Three.js will use it correctly)
     floorMaterial.roughnessMap = textures.roughnessMap;
     floorMaterial.roughnessMap.wrapS = THREE.RepeatWrapping;
     floorMaterial.roughnessMap.wrapT = THREE.RepeatWrapping;
@@ -113,12 +186,16 @@ export async function createFloor(
   
   if (textures.displacementMap) {
     floorMaterial.displacementMap = textures.displacementMap;
-    floorMaterial.displacementScale = 0.1;
-    floorMaterial.displacementBias = -0.05;
     floorMaterial.displacementMap.wrapS = THREE.RepeatWrapping;
     floorMaterial.displacementMap.wrapT = THREE.RepeatWrapping;
     floorMaterial.displacementMap.repeat.set(textureRepeat, textureRepeat);
+    floorMaterial.displacementScale = 0.1;
+    floorMaterial.displacementBias = -0.05;
   }
+  
+  // Set material properties for better visibility
+  floorMaterial.metalness = 0.0;
+  floorMaterial.roughness = 0.8; // Default roughness if texture doesn't load
   
   // Create a very large floor plane (effectively infinite for practical purposes)
   const floorSize = 10000; // Very large size to appear infinite
@@ -133,7 +210,7 @@ export async function createFloor(
   floor.receiveShadow = true;
   
   scene.add(floor);
-  console.log(`✅ Floor created with highway material, size ${floorSize}x${floorSize} at Y=${positionY}, texture repeat: ${textureRepeat}`);
+  console.log(`✅ Floor created with asphalt material (GLTF optimized), size ${floorSize}x${floorSize} at Y=${positionY}, texture repeat: ${textureRepeat}`);
   
   return floor;
 }

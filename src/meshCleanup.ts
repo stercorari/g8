@@ -98,11 +98,12 @@ export function cleanupMeshes(_model: THREE.Group, allMeshes: MeshInfo[], modelS
   const meshesToRemove: THREE.Mesh[] = [];
   
   allMeshes.forEach((meshInfo, index) => {
-    const isFlat = meshInfo.flatness < 0.15; // One dimension is < 15% of the largest
-    const isLarge = meshInfo.maxDim > modelScale * 0.3; // Mesh is > 30% of model's largest dimension
+    const isFlat = meshInfo.flatness < 0.01; // One dimension is < 15% of the largest
+    // const isLarge = meshInfo.maxDim > modelScale * 0.3; // Mesh is > 30% of model's largest dimension
+    const isLarge = false;
     const isDistant = meshDistances[index] > threshold; // Mesh is far from the main model
     
-    if ((isFlat && isLarge) || isDistant) {
+    if (/* isFlat || isLarge || */ isDistant) {
       meshesToRemove.push(meshInfo.mesh);
       // const reason = isDistant ? 'distant from main model' : 'large flat plane';
       // console.log(`🗑️ Removing ${reason}:`, meshInfo.name, 
