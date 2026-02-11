@@ -21,6 +21,10 @@ export default defineConfig({
         {
           src: 'materials/**/*',
           dest: 'materials'
+        },
+        {
+          src: 'fonts/**/*',
+          dest: 'fonts'
         }
       ]
     })

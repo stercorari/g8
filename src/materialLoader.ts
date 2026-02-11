@@ -183,6 +183,9 @@ export async function applyMaterialsFromFolder(model: THREE.Group): Promise<void
     const loadPromise = loadMaterialTextures(materialName, folderName).then((textures) => {
       const material = new THREE.MeshStandardMaterial({
         name: materialName,
+        transparent: false, // Ensure walls are opaque
+        depthWrite: true,    // Walls must write to depth buffer
+        depthTest: true      // Walls must test depth
       });
       
       if (textures.map) {

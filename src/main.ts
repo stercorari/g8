@@ -6,13 +6,15 @@ import { gsap } from "gsap";
 import { analyzeMeshes, cleanupMeshes } from "./meshCleanup";
 import { applyMaterialsFromFolder } from "./materialLoader";
 import { createFloor } from "./floor";
+import { createFloorText } from "./floorText";
 import { detectAndFixGlitches, enableDepthPrecision, DEFAULT_GLITCH_CONFIG } from "./meshDebug";
 import { setupCameraPositionLogger } from "./cameraUtils";
 import { createDivineFlickeringLight } from "./flickeringLight";
 import { createGhostlyImage } from "./ghostlyImage";
 import { setupNighthawksLighting } from "./nighthawksAtmosphere";
 import { setupBackgroundTexture } from "./backgroundTexture";
-import { setupCinematicCamera } from "./cinematicCamera";
+// import { setupCinematicCamera } from "./cinematicCamera";
+import { setupDollyCamera, DollyCamera } from "./dollyCamera";
 // import { addGraffitiToWalls } from "./graffiti";
 
 /* ------------------------------------------------------------------
@@ -25,6 +27,10 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0f0f1a);
 // Setup background texture (multiplied over dark blue for subtle effect)
 setupBackgroundTexture(scene);
+
+// Add subtle fog for atmospheric effect
+// Using exponential fog for more natural falloff
+scene.fog = new THREE.FogExp2(0x0f0f1a, 0.005); // Dark fog matching background, very subtle density
 
 // scene.add(new THREE.AxesHelper(5));
 
@@ -84,14 +90,66 @@ fillLight.position.set(-5, 3, -5);
 scene.add(fillLight);
 
 /* ------------------------------------------------------------------
+   PROGRESS TRACKING
+------------------------------------------------------------------ */
+
+interface LoadingProgress {
+  model: number;        // 0-40% - Model loading
+  materials: number;    // 40-60% - Material textures
+  floor: number;        // 60-75% - Floor textures
+  text: number;         // 75-90% - Text font
+  setup: number;        // 90-100% - Final setup
+}
+
+const progress: LoadingProgress = {
+  model: 0,
+  materials: 0,
+  floor: 0,
+  text: 0,
+  setup: 0,
+};
+
+function updateProgress(): void {
+  const total = 
+    progress.model * 0.4 +
+    progress.materials * 0.2 +
+    progress.floor * 0.15 +
+    progress.text * 0.15 +
+    progress.setup * 0.1;
+  
+  const percentage = Math.round(total * 100);
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  
+  if (progressBar) {
+    progressBar.style.width = `${percentage}%`;
+  }
+  
+  if (progressText) {
+    progressText.textContent = `${percentage}%`;
+  }
+  
+  console.log(`Progress: ${percentage}% (model: ${progress.model}, materials: ${progress.materials}, floor: ${progress.floor}, text: ${progress.text}, setup: ${progress.setup})`);
+}
+
+// Initialize progress bar
+updateProgress();
+
+/* ------------------------------------------------------------------
    MODEL LOADING
 ------------------------------------------------------------------ */
 
 const loader = new GLTFLoader();
 
+// Start loading
+progress.model = 0.1;
+updateProgress();
+
 loader.load(
   `${import.meta.env.BASE_URL}scene.gltf`,
   async (gltf) => {
+    progress.model = 1;
+    updateProgress();
     const model = gltf.scene;
     
     // First, get overall model size to determine scale
@@ -106,7 +164,11 @@ loader.load(
     cleanupMeshes(model, allMeshes, modelScale);
     
     // Load and apply materials from materials folder
+    progress.materials = 0.5;
+    updateProgress();
     await applyMaterialsFromFolder(model);
+    progress.materials = 1;
+    updateProgress();
     
     scene.add(model);
 
@@ -123,19 +185,42 @@ loader.load(
 
     // Calculate model bounds for positioning
     const box = new THREE.Box3().setFromObject(model);
-    const modelCenter = box.getCenter(new THREE.Vector3());
-    const modelSize = box.getSize(new THREE.Vector3());
-    const modelHeight = modelSize.y;
     const modelBottom = box.min.y;
     
-    // Create floor with ghiaia material below the model
-    const floorSize = Math.max(modelSize.x, modelSize.z) * 3; // Floor extends beyond model
-    const floorY = modelBottom - 0.5; // Position floor slightly below the model's bottom
+    // Position floor at ground level (y=0 or modelBottom)
+    // We'll move the model down so its bottom sits on the floor
+    const floorY = 0; // Floor at ground level
+    const modelOffsetY = floorY - modelBottom; // How much to move model down
+    
+    // Move the entire model down so its bottom sits on the floor
+    model.position.y += modelOffsetY;
+    
+    // Recalculate model bounds after positioning
+    box.setFromObject(model);
+    const updatedModelCenter = box.getCenter(new THREE.Vector3());
+    const updatedModelSize = box.getSize(new THREE.Vector3());
+    
+    // Create floor at ground level
+    const floorSize = Math.max(updatedModelSize.x, updatedModelSize.z) * 3; // Floor extends beyond model
+    progress.floor = 0.5;
+    updateProgress();
     await createFloor(scene, floorSize, floorY);
+    progress.floor = 1;
+    updateProgress();
+    
+    // Create 3D text on the floor beside the temple
+    progress.text = 0.5;
+    updateProgress();
+    await createFloorText(scene, box, floorY);
+    progress.text = 1;
+    updateProgress();
     
     // Set initial camera position and target (captured visually)
-    controls.target.set(-12.1638, 17.1302, 1.3872);
-    camera.position.set(-103.3936, 32.7233, 50.2306);
+    const initialCameraPosition = new THREE.Vector3(-103.3936, 32.7233, 50.2306);
+    const initialCameraTarget = new THREE.Vector3(-12.1638, 17.1302, 1.3872);
+    
+    camera.position.copy(initialCameraPosition);
+    controls.target.copy(initialCameraTarget);
     
     // Update controls to reflect the new camera position
     controls.update();
@@ -151,36 +236,127 @@ loader.load(
     fillLight = nighthawksLights.fillLight;
     
     // Add flickering divine light from above (broken light of god effect)
-    createDivineFlickeringLight(scene, modelCenter, modelHeight);
+    createDivineFlickeringLight(scene, updatedModelCenter, updatedModelSize.y);
     
     // Add ghostly image inside the temple
     // Position it near the center of the model, slightly forward
-    const ghostPosition = modelCenter.clone();
-    ghostPosition.y -= modelHeight * 0.1; // Position it higher up
+    const ghostPosition = updatedModelCenter.clone();
+    ghostPosition.y -= updatedModelSize.y * 0.1; // Position it higher up
     ghostPosition.z += 2; // Slightly forward
     
     createGhostlyImage(
       scene,
       `${import.meta.env.BASE_URL}people.png`,
       ghostPosition,
-      { width: modelSize.x * 1.2, height: modelSize.y * 0.6 } // Scale relative to model
+      { width: updatedModelSize.x * 1.2, height: updatedModelSize.y * 0.6 } // Scale relative to model
     );
     
     // Add graffiti to temple walls
     // addGraffitiToWalls(scene, model, 10);
     
-    // Setup cinematic camera orchestration
-    setupCinematicCamera(
+    // Setup dolly camera (low, slow, continuous movement)
+    progress.setup = 0.5;
+    updateProgress();
+    const dollyCamera = setupDollyCamera(
       camera,
       controls,
-      modelCenter,
-      modelSize,
-      true // Auto-start the cinematic sequence
+      updatedModelCenter,
+      updatedModelSize,
+      floorY,
+      true, // Auto-start the dolly movement
+      initialCameraPosition,
+      initialCameraTarget
     );
+    progress.setup = 1;
+    updateProgress();
+
+    // Setup camera controls UI
+    setupCameraControls(dollyCamera);
+
+    // Hide loader once everything is ready
+    setTimeout(() => {
+      hideLoader();
+    }, 300);
   },
-  undefined,
-  (err) => console.error(err)
+  (progressEvent) => {
+    // Track model loading progress
+    // GLTFLoader progress event has loaded and total properties
+    try {
+      if (progressEvent.total && progressEvent.total > 0) {
+        progress.model = Math.min(progressEvent.loaded / progressEvent.total, 0.95);
+      } else if (progressEvent.loaded !== undefined) {
+        // Increment based on loaded bytes
+        progress.model = Math.min(0.1 + (progressEvent.loaded / 1000000) * 0.8, 0.95);
+      } else {
+        // Fallback: increment gradually
+        progress.model = Math.min(progress.model + 0.1, 0.95);
+      }
+      updateProgress();
+    } catch (e) {
+      console.warn('Progress tracking error:', e);
+    }
+  },
+  (err) => {
+    console.error(err);
+    hideLoader(); // Hide loader even on error
+  }
 );
+
+/**
+ * Hides the loading overlay
+ */
+function hideLoader(): void {
+  const loader = document.getElementById('loader');
+  if (loader) {
+    loader.classList.add('opacity-0', 'pointer-events-none');
+    // Remove from DOM after fade out completes
+    setTimeout(() => {
+      loader.remove();
+    }, 500);
+  }
+}
+
+/**
+ * Setup camera control buttons (play/pause/reset)
+ */
+function setupCameraControls(dollyCamera: DollyCamera): void {
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const playPauseIcon = document.getElementById('playPauseIcon');
+
+  if (!playPauseBtn || !resetBtn || !playPauseIcon) {
+    return;
+  }
+
+  // Toggle play/pause function
+  const togglePlayPause = () => {
+    if (dollyCamera.isPlaying()) {
+      dollyCamera.pause();
+      playPauseIcon.textContent = '▶';
+    } else {
+      dollyCamera.resume();
+      playPauseIcon.textContent = '⏸';
+    }
+  };
+
+  // Play/Pause button
+  playPauseBtn.addEventListener('click', togglePlayPause);
+
+  // Spacebar keyboard shortcut
+  window.addEventListener('keydown', (event) => {
+    // Only trigger if spacebar and not typing in an input field
+    if (event.code === 'Space' && event.target === document.body) {
+      event.preventDefault(); // Prevent page scroll
+      togglePlayPause();
+    }
+  });
+
+  // Reset button
+  resetBtn.addEventListener('click', () => {
+    dollyCamera.reset();
+    playPauseIcon.textContent = '⏸';
+  });
+}
 
 /* ------------------------------------------------------------------
    CAMERA ANIMATION (GSAP)

@@ -2,52 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Three.js GLTF Scene</title>
+  <title>Quando eravamo ancora insieme</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
-
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet"> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #0b0b0b;
-      color: #eaeaea;
-      font-family: system-ui, sans-serif;
-    }
-
-    canvas {
-      display: block;
-    }
-
-
-    h1 {
-      font-family: 'Homemade Apple', cursive;
-      font-size: 60px;
-      margin: 0 0 12px;
-      font-weight: 400;
-      line-height: 1.1;
-    }
-
-    p {
-      font-size: 16px;
-      line-height: 1.5;
-      opacity: 0.85;
+    html, body, button, input, textarea, select, option {
+      font-family: "Plus Jakarta Sans", sans-serif;
+  font-optical-sizing: auto;
     }
   </style>
+
 </head>
-<body>
+<body class="m-0 p-0 overflow-hidden bg-[#0b0b0b] text-[#eaeaea] font-sans">
+
+  <div id="loader" class="fixed top-0 left-0 w-full h-full bg-[#0b0b0b] flex flex-col justify-center items-center z-20 transition-opacity duration-500 ease-out">
+    <div class="w-[50px] h-[50px] border-4 border-white/10 border-t-[#eaeaea] rounded-full animate-spin"></div>
+    <div class="w-[300px] h-1 bg-white/10 rounded mt-8 overflow-hidden">
+      <div class="h-full bg-[#eaeaea] w-0 transition-all duration-300 ease rounded" id="progressBar"></div>
+    </div>
+    <div class="mt-2.5 text-xs opacity-60" id="progressText">0%</div>
+  </div>
 
   <div class="fixed bottom-0 left-0 right-0 p-10 text-end">
-    <h1 id="title">Quando eravamo ancora insieme</h1>
-    <!-- <p id="subtitle">
+    <!-- <h1 id="title" class="text-[60px] mb-3 font-normal leading-[1.1]">Quando eravamo ancora insieme</h1> -->
+    <!-- <p id="subtitle" class="text-base leading-relaxed opacity-85">
       Orbit with mouse. Scroll to zoom.  
       Camera motion and lights are animated.
     </p> -->
+    
   </div>
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" class="block relative z-10"></canvas>
+  
+  <div id="head" class="fixed transform z-30 bottom-0 right-0">
+    <div class="flex flex-col items-start text-white whitespace-nowrap">
+      <div class="p-5 flex gap-5 items-center">
+        <span class="text-sm font-medium">Quando eravamo ancora insieme</span>
+        <div class="flex gap-3 ml-4">
+          <button id="playPauseBtn" class="bg-white text-black cursor-pointer w-6 h-6 rounded-xl flex items-center justify-center text-xs pointer-events-auto" title="Play/Pause">
+            <span id="playPauseIcon">||</span>
+          </button>
+          <button id="resetBtn" class="bg-white text-black cursor-pointer w-6 h-6 rounded-xl flex items-center justify-center text-xs pointer-events-auto" title="Reset">
+            ↻
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="spine" class="fixed transform pointer-events-none z-30">
+    <div class="flex flex-col items-start text-white whitespace-nowrap">
+      <div class="p-5 flex gap-5">
+        <span class="text-2xl font-medium tracking-tight">Beatrice Abbondanza</span>
+        <span class="text-sm mt-2 opacity-80">2026</span>
+      </div>
+    </div>
+  </div>
+  
   <!-- <img src="/people.png" class="full-width" /> -->
   <script type="module" src="/src/main.ts"></script>
 </body>
