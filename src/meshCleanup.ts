@@ -112,6 +112,7 @@ export function cleanupMeshes(_model: THREE.Group, allMeshes: MeshInfo[], _model
       meshInfo.mesh.receiveShadow = true;
     }
   });
+  // console.log("🚀 ~ cleanupMeshes ~ meshesToRemove:", meshesToRemove)
   
   // Remove the identified meshes
   meshesToRemove.forEach(mesh => {

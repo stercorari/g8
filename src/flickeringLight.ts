@@ -48,7 +48,7 @@ export class FlickeringLight {
     this.light.position.copy(config.position);
     this.light.target.position.copy(targetPosition);
     this.light.castShadow = true;
-    this.light.angle = Math.PI / 4; // Wider 45 degree cone angle to affect more area
+    this.light.angle = Math.PI / 8; // Narrower ~22.5 degree cone angle to avoid crossing columns
     this.light.penumbra = 0.8; // Softer, more gradual edges
     this.light.decay = 0.5; // Slower decay so light travels further
     this.light.distance = 1000; // Increased range to affect more of the scene
