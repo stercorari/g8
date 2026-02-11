@@ -90,7 +90,7 @@ scene.add(fillLight);
 const loader = new GLTFLoader();
 
 loader.load(
-  '/scene.gltf',
+  `${import.meta.env.BASE_URL}scene.gltf`,
   async (gltf) => {
     const model = gltf.scene;
     
@@ -161,7 +161,7 @@ loader.load(
     
     createGhostlyImage(
       scene,
-      '/people.png',
+      `${import.meta.env.BASE_URL}people.png`,
       ghostPosition,
       { width: modelSize.x * 1.2, height: modelSize.y * 0.6 } // Scale relative to model
     );

@@ -10,7 +10,7 @@ export function setupBackgroundTexture(scene: THREE.Scene): void {
   
   // Load background texture from blusfondo folder
   const textureLoader = new THREE.TextureLoader();
-  textureLoader.load('/materials/blusfondo/PaintedWood001_2K-JPG_Color.jpg', (texture) => {
+  textureLoader.load(`${import.meta.env.BASE_URL}materials/blusfondo/PaintedWood001_2K-JPG_Color.jpg`, (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
     
     // Create canvas to blend texture with base color using multiply mode

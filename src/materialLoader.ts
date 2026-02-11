@@ -53,7 +53,7 @@ function loadMaterialTextures(materialName: string, folderName: string): Promise
   displacementMap?: THREE.Texture;
 }> {
   return new Promise((resolve) => {
-    const basePath = `/materials/${folderName}/`;
+    const basePath = `${import.meta.env.BASE_URL}materials/${folderName}/`;
     const textures: {
       map?: THREE.Texture;
       normalMap?: THREE.Texture;
