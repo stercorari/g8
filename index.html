@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Three.js GLTF Scene</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0b0b0b;
+      color: #eaeaea;
+      font-family: system-ui, sans-serif;
+    }
+
+    canvas {
+      display: block;
+    }
+
+
+    h1 {
+      font-family: 'Homemade Apple', cursive;
+      font-size: 60px;
+      margin: 0 0 12px;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="fixed bottom-0 left-0 right-0 p-10 text-end">
+    <h1 id="title">Quando eravamo ancora insieme</h1>
+    <!-- <p id="subtitle">
+      Orbit with mouse. Scroll to zoom.  
+      Camera motion and lights are animated.
+    </p> -->
+  </div>
+  <canvas id="canvas"></canvas>
+  <!-- <img src="/people.png" class="full-width" /> -->
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
